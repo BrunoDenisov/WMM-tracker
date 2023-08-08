@@ -20,6 +20,13 @@ def read_mining_missions(log_file_path):
                 mining_missions.append(data)
     return mining_missions
 
+def process_mission_completed(data):
+    if "Commodity_Localised" in data and "Count" in data:
+        commodity = data["Commodity_Localised"]
+        count = data["Count"]
+        if commodity in missions_data:
+            missions_data[commodity]["Count"] -= count
+
 def fetch_and_display_data(tree_var, total_reward_label_var):
     global missions_data, total_reward
 
@@ -33,6 +40,12 @@ def fetch_and_display_data(tree_var, total_reward_label_var):
 
     for log_file in log_files:
         log_file_path = os.path.join(log_directory, log_file)
+        with open(log_file_path, 'r') as log_file:
+            for line in log_file:
+                data = json.loads(line)
+                if data["event"] == "MissionCompleted" and "Mission_Mining" in data["Name"]:
+                    process_mission_completed(data)
+
         mining_missions = read_mining_missions(log_file_path)
         for mission in mining_missions:
             commodity = mission["Commodity_Localised"]
